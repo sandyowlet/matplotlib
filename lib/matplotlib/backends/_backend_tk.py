@@ -638,6 +638,7 @@ class NavigationToolbar2Tk(NavigationToolbar2, tk.Frame):
             window = canvas.get_tk_widget().master
         tk.Frame.__init__(self, master=window, borderwidth=2,
                           width=int(canvas.figure.bbox.width), height=50)
+        self.pack_propagate(False)
 
         self._buttons = {}
         for text, tooltip_text, image_file, callback in self.toolitems:
