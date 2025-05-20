@@ -232,6 +232,14 @@ class FigureCanvasTk(FigureCanvasBase):
         self._rubberband_rect_black = None
         self._rubberband_rect_white = None
 
+        # debug: bind the configure event to a function that prints the size
+        self._tkcanvas.bind("<Configure>", self._print_size, add="+")
+
+    def _print_size(self, event):
+        print(
+            "Canvas size:", self._tkcanvas.winfo_width(), self._tkcanvas.winfo_height()
+        )
+
     def _update_device_pixel_ratio(self, event=None):
         ratio = None
         if sys.platform == 'win32':
@@ -249,6 +257,7 @@ class FigureCanvasTk(FigureCanvasBase):
             self._tkcanvas.configure(width=w, height=h)
 
     def resize(self, event):
+        print("Canvas resize method called")
         width, height = event.width, event.height
 
         # compute desired figure size in inches
@@ -546,9 +555,11 @@ class FigureManagerTk(FigureManagerBase):
                 manager_class._owns_mainloop = False
 
     def _update_window_dpi(self, *args):
+        print("Updating window DPI")
         newdpi = self._window_dpi.get()
         self.window.call('tk', 'scaling', newdpi / 72)
         if self.toolbar and hasattr(self.toolbar, '_rescale'):
+            print("Updating toolbar DPI")
             self.toolbar._rescale()
         self.canvas._update_device_pixel_ratio()
 
@@ -636,8 +647,13 @@ class NavigationToolbar2Tk(NavigationToolbar2, tk.Frame):
 
         if window is None:
             window = canvas.get_tk_widget().master
-        tk.Frame.__init__(self, master=window, borderwidth=2,
-                          width=int(canvas.figure.bbox.width), height=50)
+        tk.Frame.__init__(
+            self,
+            master=window,
+            borderwidth=2,
+            width=int(canvas.figure.bbox.width),
+            height=50,
+        )
         # Avoid message_label expanding the toolbar size, and in turn expanding the
         # canvas size.
         # Without pack_propagate(False), when the user defines a small figure size
@@ -682,6 +698,14 @@ class NavigationToolbar2Tk(NavigationToolbar2, tk.Frame):
         if pack_toolbar:
             self.pack(side=tk.BOTTOM, fill=tk.X)
 
+        self.bind(
+            "<Configure>",
+            lambda event: print(
+                "Toolbar size: ", self.winfo_width(), self.winfo_height()
+            ),
+            add="+",
+        )
+
     def _rescale(self):
         """
         Scale all children of the toolbar to current DPI setting.
@@ -692,6 +716,8 @@ class NavigationToolbar2Tk(NavigationToolbar2, tk.Frame):
         this function re-applies all the same sizes in points, which Tk will
         scale correctly to pixels.
         """
+        print("Toolbar rescale method called")
+        print("Toolbar size before: ", self.winfo_width(), self.winfo_height())
         for widget in self.winfo_children():
             if isinstance(widget, (tk.Button, tk.Checkbutton)):
                 if hasattr(widget, '_image_file'):
@@ -708,6 +734,7 @@ class NavigationToolbar2Tk(NavigationToolbar2, tk.Frame):
             else:
                 _log.warning('Unknown child class %s', widget.winfo_class)
         self._label_font.configure(size=10)
+        print("Toolbar size after: ", self.winfo_width(), self.winfo_height())
 
     def _update_buttons_checked(self):
         # sync button checkstates to match active mode
